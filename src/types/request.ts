@@ -33,7 +33,7 @@ export interface FittingRequest {
   productName: string;     // 단일 상품명
   color: string;           // 선택 색상
   size: string;            // 선택 사이즈
-  fittingRoomId: string;
+  fittingRoomId: string | null;
   status: FittingStatus;
   requestTime: number;     // Unix timestamp (ms) — API: ISO 8601 string으로 변환 필요
   sessionId: string;       // 같은 태깅 세션에서 생성된 요청들을 묶는 ID
@@ -51,7 +51,7 @@ export type CreateSingleRequestBody = Omit<FittingRequest, 'requestId' | 'reques
  */
 export interface CreateFittingRequestBody {
   products: TaggedProduct[];
-  fittingRoomId: string;
+  fittingRoomId: string | null;
   status: FittingStatus;
   sessionId: string;
 }

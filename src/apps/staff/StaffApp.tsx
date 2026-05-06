@@ -55,7 +55,7 @@ export const StaffApp = () => {
               <div className="flex justify-between items-start border-b pb-4" style={{ borderColor: 'var(--border)' }}>
                 <div>
                   <div className="flex items-center gap-3 mb-2">
-                    <span className="font-bold text-lg">{t('Fitting Room')} {req.fittingRoomId}</span>
+                    <span className="font-bold text-lg">{t('Fitting Room')} {req.fittingRoomId || t('Waiting...')}</span>
                     <span className={`status-badge ${req.status}`}>{t(req.status)}</span>
                   </div>
                   <div className="text-sm text-muted flex items-center gap-1">

@@ -26,6 +26,8 @@ export const CustomerApp = () => {
   const [assignedRoom, setAssignedRoom] = useState<string | null>(null);
   
   const [viewMode, setViewMode] = useState<'carousel' | 'list'>('carousel');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   // Carousel State
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -48,7 +50,10 @@ export const CustomerApp = () => {
   };
 
   const handleTagProduct = (productId: string) => {
-    if (assignedRoom) setAssignedRoom(null);
+    if (isSuccess) {
+      setIsSuccess(false);
+      setAssignedRoom(null);
+    }
     const product = mockProducts.find(p => p.id === productId);
     if (!product) return;
 
@@ -84,26 +89,33 @@ export const CustomerApp = () => {
   };
 
   const handleFittingRequest = async () => {
-    if (taggedItems.length === 0) return;
+    if (taggedItems.length === 0 || isSubmitting) return;
 
-    const sessionId = getOrCreateSessionId();
+    setIsSubmitting(true);
+    try {
+      const sessionId = getOrCreateSessionId();
 
-    // ⚠️ 백엔드 구조: 요청 1개 = 상품 1개
-    // createRequests: 상품 배열 → 상품별 개별 API 요청 생성
-    // 상품 3개 태깅 → POST /api/requests 3회 호출 (병렬)
-    const results = await createRequests({
-      products: [...taggedItems],
-      fittingRoomId: '', // service에서 자동 배정
-      status: 'pending',
-      sessionId,
-    });
+      // ⚠️ 백엔드 구조: 요청 1개 = 상품 1개
+      const results = await createRequests({
+        products: [...taggedItems],
+        fittingRoomId: null, // 초기 생성 시 null (백엔드 수동 배정용)
+        status: 'pending',
+        sessionId,
+      });
 
-    // 첫 번째 요청의 피팅룸을 UI에 표시
-    const firstRoom = results[0]?.fittingRoomId ?? '';
-    setAssignedRoom(firstRoom);
-    setTaggedItems([]);
-    setCurrentIndex(0);
-    showToast(t('Fitting request submitted!'));
+      // 첫 번째 요청의 피팅룸을 UI에 표시
+      const firstRoom = results[0]?.fittingRoomId || null;
+      setAssignedRoom(firstRoom);
+      setIsSuccess(true);
+      setTaggedItems([]);
+      setCurrentIndex(0);
+      showToast(t('Fitting request submitted!'));
+    } catch (error) {
+      console.error('Fitting request failed:', error);
+      showToast(t('Error: Backend connection failed.'));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Touch Handlers for Carousel
@@ -156,11 +168,22 @@ export const CustomerApp = () => {
         </div>
       </div>
 
-      {assignedRoom && (
+      {isSuccess && (
         <div className="card my-4 animate-slide-in" style={{ backgroundColor: 'var(--primary)', color: 'white', padding: '2rem 1rem', textAlign: 'center', borderRadius: '1.5rem' }}>
           <CheckCircle size={48} style={{ margin: '0 auto', marginBottom: '16px' }} />
-          <h2 className="text-2xl font-bold mb-2">{t('Fitting Room Assigned!')}</h2>
-          <p className="text-lg">{t('Please go to Fitting Room')} <strong style={{ fontSize: '1.5em', margin: '0 0.2em' }}>{assignedRoom}</strong></p>
+          <h2 className="text-2xl font-bold mb-2">{t('Fitting Request Received!')}</h2>
+          {assignedRoom ? (
+            <p className="text-lg">{t('Please go to Fitting Room')} <strong style={{ fontSize: '1.5em', margin: '0 0.2em' }}>{assignedRoom}</strong></p>
+          ) : (
+            <p className="text-lg">{t('Please wait for a moment.')}<br/>{t('Staff will assign a room soon.')}</p>
+          )}
+          <button 
+            className="btn btn-secondary mt-6" 
+            style={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'white', border: 'none' }}
+            onClick={() => setIsSuccess(false)}
+          >
+            {t('Close')}
+          </button>
         </div>
       )}
 
@@ -376,14 +399,24 @@ export const CustomerApp = () => {
       )}
 
       {/* Floating Action Bar */}
-      {!assignedRoom && taggedItems.length > 0 && (
+      {!isSuccess && taggedItems.length > 0 && (
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '1rem', background: 'var(--bg-color)', borderTop: '1px solid var(--border)', zIndex: 10 }}>
           <button 
             className="btn btn-primary"
-            style={{ width: '100%', padding: '1.2rem', fontSize: '1.1rem', borderRadius: '1rem', fontWeight: 'bold' }}
+            style={{ width: '100%', padding: '1.2rem', fontSize: '1.1rem', borderRadius: '1rem', fontWeight: 'bold', opacity: isSubmitting ? 0.7 : 1 }}
             onClick={handleFittingRequest}
+            disabled={isSubmitting}
           >
-            <Shirt size={20} /> {t('Confirm & Request Fitting')}
+            {isSubmitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+                {t('Submitting...')}
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <Shirt size={20} /> {t('Confirm & Request Fitting')}
+              </span>
+            )}
           </button>
         </div>
       )}

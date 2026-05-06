@@ -104,7 +104,7 @@ export const AdminApp = () => {
                 <tr key={req.requestId}>
                   <td className="font-medium">{format(req.requestTime, 'HH:mm:ss')}</td>
                   <td className="text-sm text-muted">{req.requestId.slice(-6)}</td>
-                  <td className="font-bold" style={{ textAlign: 'center' }}>Room {req.fittingRoomId}</td>
+                  <td className="font-bold" style={{ textAlign: 'center' }}>{req.fittingRoomId ? `Room ${req.fittingRoomId}` : '-'}</td>
                   {/* 단일 상품 — 백엔드 구조: 요청 1개 = 상품 1개 */}
                   <td className="text-sm">
                     <span title={`${req.color} / ${req.size}`}>

@@ -28,7 +28,7 @@ import type {
 // BASE_URL — 백엔드 서버 주소
 // 실제 연동 시 아래 값을 실제 서버 주소로 교체
 // ------------------------------------------------------------
-const BASE_URL = 'http://localhost:8000'; // 로컬 FastAPI 서버 주소
+const BASE_URL = 'http://127.0.0.1:8000'; // 로컬 FastAPI 서버 주소 (127.0.0.1이 더 안정적임)
 
 // ============================================================
 // 내부 API 응답 타입 (백엔드 응답 snake_case 구조)
@@ -42,7 +42,7 @@ interface ApiRequestItem {
   product_name: string;
   color: string;
   size: string;
-  fitting_room_id: string;
+  fitting_room_id: string | null;
   status: FittingStatus;
   request_time: string;   // ISO 8601 → Unix timestamp 변환 필요
   session_id: string;
@@ -54,7 +54,7 @@ interface ApiCreateRequestBody {
   product_name: string;
   color: string;
   size: string;
-  fitting_room_id: string;
+  fitting_room_id: string | null;
   status: FittingStatus;
   session_id: string;
 }
