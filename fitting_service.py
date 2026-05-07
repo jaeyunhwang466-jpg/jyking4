@@ -10,10 +10,7 @@ app = FastAPI(title="KEEP Fitting Room Service")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=["*"], # 개발 중이므로 임시로 모든 오리진 허용
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -78,6 +75,7 @@ def db_update_room(room_id: str, status: FittingRoomStatus, request_id: Optional
 
 @app.post("/api/requests", response_model=FittingRequest)
 def create_request(item: CreateRequestItem):
+    print(f"DEBUG: POST /api/requests hit with data: {item.dict()}")
     """[수동 배정] 고객 요청 시 배정하지 않고 대기(pending) 상태로 생성"""
     new_request = FittingRequest(
         request_id=f"req-{uuid.uuid4().hex[:8]}",
@@ -96,6 +94,7 @@ def create_request(item: CreateRequestItem):
 
 @app.get("/api/requests")
 def get_requests():
+    print(f"DEBUG: GET /api/requests hit - current db size: {len(requests_db)}")
     return {"requests": requests_db}
 
 @app.patch("/api/requests/{request_id}", response_model=FittingRequest)
